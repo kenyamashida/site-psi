@@ -12,7 +12,7 @@ import Home from './pages/Home';
  */
 export default function App() {
   // 1. Defina a variável com o link do seu Render (MUDE APENAS ISTO)
-  const API_URL = 'https://seu-link-do-render.onrender.com/api/professionals'; // Exemplo: 'https://brasiltour-api.onrender.com'
+  const API_URL = 'https://seu-link-do-render.onrender.com/api/professionals';  
 
   const [tema, setTema] = useState('claro');
   const [statusBackend, setStatusBackend] = useState('offline');
