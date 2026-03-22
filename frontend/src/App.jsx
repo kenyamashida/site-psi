@@ -1,47 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 
-// Substitua este link pelo URL exato que o Render lhe deu (sem a barra / no final)
-const API_URL = 'https://brasiltour-https://site-psi.onrender.com.onrender.com';
 
 // Importação de componentes modulares
-// Certifique-se de que os nomes dos ficheiros em disco coincidem exatamente (incluindo maiúsculas)
 import Navbar from './components/navbar/Navbar';
 import Footer from './components/footer/Footer';
-
-// Importação de páginas
 import Home from './pages/Home';
 
 /**
  * App.jsx - Orquestrador da Aplicação
- * Responsável pelas rotas, estado do tema e comunicação com o Backend.
  */
 export default function App() {
+  // 1. Defina a variável com o link do seu Render (MUDE APENAS ISTO)
+  const API_URL = 'https://seu-link-do-render.onrender.com/api/professionals'; // Exemplo: 'https://brasiltour-api.onrender.com'
+
   const [tema, setTema] = useState('claro');
   const [statusBackend, setStatusBackend] = useState('offline');
   const [cidades, setCidades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  /**
-   * Função para procurar dados no servidor Node.js
+/**
+   * Função para procurar dados no servidor Node.js (Render)
    */
   const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      // 1. Verifica se o servidor está online
-      const statusRes = await fetch('http://localhost:5000/api/health');
+      // Usamos a variável API_URL em vez do localhost
+      const statusRes = await fetch(`${API_URL}/api/health`);
       if (!statusRes.ok) throw new Error('Health check failed');
+      
       const statusJson = await statusRes.json();
       const isOnline = statusJson.status === 'ok';
       if (!isOnline) throw new Error('Backend returned bad status');
 
       setStatusBackend('online');
 
-      // 2. Procura a lista de psicólogos
-      const profissionaisRes = await fetch('http://localhost:5000/api/professionals/');
+      // Usamos a variável API_URL para buscar os profissionais
+      const profissionaisRes = await fetch(`${API_URL}/api/professionals/`);
       if (!profissionaisRes.ok) throw new Error('Failed to fetch professionals');
+      
       const profissionaisJson = await profissionaisRes.json();
       setCidades(profissionaisJson);
     } catch (err) {
