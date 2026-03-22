@@ -69,7 +69,7 @@ export default function App() {
         setTema={setTema} 
       />
 
-      <main className="flex-grow max-w-6xl mx-auto w-full px-6 py-12">
+      <main className="grow max-w-6xl mx-auto w-full px-6 py-12">
         {/* Indicador de Status da API no canto superior direito */}
         <div className="flex justify-end mb-8">
           <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${

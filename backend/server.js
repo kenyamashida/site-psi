@@ -9,17 +9,15 @@ const professionalsRouter = require('./routes/professionals');
 const contactsRouter = require('./routes/contacts');
 
 // Middleware
-app.use(cors({
-  origin: config.corsOrigins,
-  optionsSuccessStatus: 200
-}));
+// CORREÇÃO DO CORS: Permite que o Vercel (e qualquer outro domínio) consiga ler os dados.
+app.use(cors());
 app.use(express.json());
 
 // Routes
 app.use('/api/professionals', professionalsRouter);
 app.use('/api/request', contactsRouter);
 
-// Health check
+// Health check (Útil para o Render verificar se o servidor está online)
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
@@ -29,12 +27,15 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
 });
 
-const PORT = config.port;
-const HOST = config.host;
+// CORREÇÃO DO RENDER: 
+// process.env.PORT permite que o Render defina a porta automaticamente.
+// HOST = '0.0.0.0' obriga o servidor a abrir-se para a internet (evita o erro de Timeout).
+const PORT = process.env.PORT || config.port || 10000;
+const HOST = '0.0.0.0';
 
 const server = app.listen(PORT, HOST, () => {
   console.log(`\n🚀 Server running on http://${HOST}:${PORT}`);
-  console.log(`📡 CORS enabled for: ${config.corsOrigins.join(', ')}`);
+  console.log(`📡 CORS is fully open for Vercel and other origins`);
   console.log(`\n📚 API Routes:`);
   console.log(`  GET    /api/professionals/       - List active psychologists`);
   console.log(`  GET    /api/professionals/all    - List all psychologists`);
