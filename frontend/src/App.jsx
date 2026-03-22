@@ -28,19 +28,22 @@ export default function App() {
     setError(null);
     try {
       // 1. Verifica se o servidor está online
-      const statusRes = await fetch('http://localhost:3001/api/status');
-      if (!statusRes.ok) throw new Error();
+      const statusRes = await fetch('http://localhost:5000/api/health');
+      if (!statusRes.ok) throw new Error('Health check failed');
       const statusJson = await statusRes.json();
-      setStatusBackend(statusJson.status);
+      const isOnline = statusJson.status === 'ok';
+      if (!isOnline) throw new Error('Backend returned bad status');
 
-      // 2. Procura a lista de destinos
-      const cidadesRes = await fetch('http://localhost:3001/api/cidades');
-      const cidadesJson = await cidadesRes.json();
-      setCidades(cidadesJson);
+      setStatusBackend('online');
+
+      // 2. Procura a lista de psicólogos
+      const profissionaisRes = await fetch('http://localhost:5000/api/professionals/');
+      if (!profissionaisRes.ok) throw new Error('Failed to fetch professionals');
+      const profissionaisJson = await profissionaisRes.json();
+      setCidades(profissionaisJson);
     } catch (err) {
-      console.error("Erro na ligação ao backend:", err);
+      console.error('Erro na ligação ao backend:', err);
       setStatusBackend('offline');
-      // Define erro como true para mostrar o alerta visual na página Home
       setError(true);
     } finally {
       setLoading(false);

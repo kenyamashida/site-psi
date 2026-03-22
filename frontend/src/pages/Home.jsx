@@ -18,7 +18,7 @@ export default function Home({ tema, cidades, loading, error, fetchData }) {
           <WifiOff size={24} />
           <div className="flex-grow text-left">
             <p className="font-bold">Aviso de Ligação</p>
-            <p className="text-sm opacity-90">Não foi possível ligar ao servidor backend na porta 3001.</p>
+            <p className="text-sm opacity-90">Não foi possível ligar ao servidor backend na porta 5000.</p>
           </div>
           <button 
             onClick={fetchData} 

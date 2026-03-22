@@ -1,26 +1,62 @@
 const express = require('express');
 const cors = require('cors');
+const config = require('./config');
 
 const app = express();
-const PORT = 3001;
 
-// Configuração de CORS: permite que o seu React fale com o Node
-app.use(cors());
+// Import routes
+const professionalsRouter = require('./routes/professionals');
+const contactsRouter = require('./routes/contacts');
+
+// Middleware
+app.use(cors({
+  origin: config.corsOrigins,
+  optionsSuccessStatus: 200
+}));
 app.use(express.json());
 
-app.get('/api/status', (req, res) => {
-  res.json({ status: 'online' });
+// Routes
+app.use('/api/professionals', professionalsRouter);
+app.use('/api/request', contactsRouter);
+
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
 });
 
-app.get('/api/cidades', (req, res) => {
-  res.json([
-    { id: 1, nome: 'Rio de Janeiro', clima: 'Tropical' },
-    { id: 2, nome: 'Salvador', clima: 'Quente' },
-    { id: 3, nome: 'Manaus', clima: 'Húmido' },
-    { id: 4, nome: 'Florianópolis', clima: 'Temperado' }
-  ]);
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Endpoint not found' });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor backend ativo em http://localhost:${PORT}`);
+const PORT = config.port;
+const HOST = config.host;
+
+const server = app.listen(PORT, HOST, () => {
+  console.log(`\n🚀 Server running on http://${HOST}:${PORT}`);
+  console.log(`📡 CORS enabled for: ${config.corsOrigins.join(', ')}`);
+  console.log(`\n📚 API Routes:`);
+  console.log(`  GET    /api/professionals/       - List active psychologists`);
+  console.log(`  GET    /api/professionals/all    - List all psychologists`);
+  console.log(`  GET    /api/professionals/:id    - Get one psychologist`);
+  console.log(`  POST   /api/professionals/       - Create psychologist`);
+  console.log(`  PUT    /api/professionals/:id    - Update psychologist`);
+  console.log(`  DELETE /api/professionals/:id    - Delete psychologist`);
+  console.log(`\n  GET    /api/request/             - List contact requests`);
+  console.log(`  GET    /api/request/:id          - Get one request`);
+  console.log(`  GET    /api/request/psychologist/:id - Get requests for psychologist`);
+  console.log(`  POST   /api/request/             - Create contact request`);
+  console.log(`  PUT    /api/request/:id          - Update request`);
+  console.log(`  PATCH  /api/request/:id/read     - Mark as read`);
+  console.log(`  DELETE /api/request/:id          - Delete request`);
+  console.log(`\n`);
+});
+
+// Error handling
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
