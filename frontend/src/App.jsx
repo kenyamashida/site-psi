@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 
+// Substitua este link pelo URL exato que o Render lhe deu (sem a barra / no final)
+const API_URL = 'https://brasiltour-https://site-psi.onrender.com.onrender.com';
+
 // Importação de componentes modulares
 // Certifique-se de que os nomes dos ficheiros em disco coincidem exatamente (incluindo maiúsculas)
 import Navbar from './components/navbar/Navbar';
