@@ -1,13 +1,16 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const config = require('../config');
 
-const dbPath = path.join(__dirname, '../db.sqlite3');
+const dbPath = path.isAbsolute(config.dbPath)
+  ? config.dbPath
+  : path.join(process.cwd(), config.dbPath);
 
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
-    console.error('Error opening database:', err);
+    console.error('Erro ao conectar ao banco SQLite:', err);
   } else {
-    console.log('Connected to SQLite database');
+    console.log('✓ Conectado ao banco SQLite');
     db.run('PRAGMA foreign_keys = ON');
     initializeTables();
   }
@@ -15,7 +18,6 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 function initializeTables() {
   db.serialize(() => {
-    // Create psychologist table
     db.run(`
       CREATE TABLE IF NOT EXISTS contact_psychologist (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +34,6 @@ function initializeTables() {
       )
     `);
 
-    // Create contact request table
     db.run(`
       CREATE TABLE IF NOT EXISTS contact_contactrequest (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,6 +43,20 @@ function initializeTables() {
         phone TEXT,
         message TEXT NOT NULL,
         is_read BOOLEAN DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (psychologist_id) REFERENCES contact_psychologist(id) ON DELETE SET NULL
+      )
+    `);
+
+    db.run(`
+      CREATE TABLE IF NOT EXISTS admin_users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        name TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'admin',
+        psychologist_id INTEGER,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (psychologist_id) REFERENCES contact_psychologist(id) ON DELETE SET NULL

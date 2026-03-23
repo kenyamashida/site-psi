@@ -1,11 +1,13 @@
 const ContactRequest = require('../models/contactRequest');
+const config = require('../config');
+const { messageMinLength, nameMinLength } = config.validation;
 
 const contactRequestController = {
   list: (req, res) => {
     ContactRequest.list((err, rows) => {
       if (err) {
-        console.error('Error fetching contact requests:', err);
-        return res.status(500).json({ error: 'Error fetching contact requests' });
+        console.error('Erro ao buscar solicitações:', err);
+        return res.status(500).json({ error: config.messages.error });
       }
       res.json(rows || []);
     });
@@ -15,17 +17,17 @@ const contactRequestController = {
     const { id } = req.params;
 
     if (!id || isNaN(id)) {
-      return res.status(400).json({ error: 'Invalid request ID' });
+      return res.status(400).json({ error: 'ID da solicitação inválido' });
     }
 
     ContactRequest.getById(id, (err, row) => {
       if (err) {
-        console.error('Error fetching contact request:', err);
-        return res.status(500).json({ error: 'Error fetching contact request' });
+        console.error('Erro ao buscar solicitação:', err);
+        return res.status(500).json({ error: config.messages.error });
       }
 
       if (!row) {
-        return res.status(404).json({ error: 'Contact request not found' });
+        return res.status(404).json({ error: 'Solicitação não encontrada' });
       }
 
       res.json(row);
@@ -36,13 +38,13 @@ const contactRequestController = {
     const { psychologist_id } = req.params;
 
     if (!psychologist_id || isNaN(psychologist_id)) {
-      return res.status(400).json({ error: 'Invalid psychologist ID' });
+      return res.status(400).json({ error: 'ID do psicólogo inválido' });
     }
 
     ContactRequest.listByPsychologist(psychologist_id, (err, rows) => {
       if (err) {
-        console.error('Error fetching contact requests:', err);
-        return res.status(500).json({ error: 'Error fetching contact requests' });
+        console.error('Erro ao buscar solicitações:', err);
+        return res.status(500).json({ error: config.messages.error });
       }
       res.json(rows || []);
     });
@@ -51,34 +53,38 @@ const contactRequestController = {
   create: (req, res) => {
     const { psychologist_id, name, email, phone, message } = req.body;
 
-    // Validations
     if (!name || !email || !message) {
-      return res.status(400).json({ error: 'Missing required fields: name, email, message' });
+      return res
+        .status(400)
+        .json({ error: 'Campos obrigatórios: nome, email e mensagem' });
     }
 
-    if (name.length < 3) {
-      return res.status(400).json({ error: 'Name must be at least 3 characters' });
+    if (name.length < nameMinLength) {
+      return res
+        .status(400)
+        .json({ error: `Nome deve ter pelo menos ${nameMinLength} caracteres` });
     }
 
-    if (message.length < 10) {
-      return res.status(400).json({ error: 'Message must be at least 10 characters' });
+    if (message.length < messageMinLength) {
+      return res
+        .status(400)
+        .json({ error: `Mensagem deve ter pelo menos ${messageMinLength} caracteres` });
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: 'Invalid email format' });
+      return res.status(400).json({ error: 'Email inválido' });
     }
 
-    const data = { psychologist_id, name, email, phone, message };
+    const data = { psychologist_id: psychologist_id || null, name, email, phone: phone || null, message };
 
     ContactRequest.create(data, (err) => {
       if (err) {
-        console.error('Error creating contact request:', err);
-        return res.status(500).json({ error: 'Error creating contact request' });
+        console.error('Erro ao criar solicitação:', err);
+        return res.status(500).json({ error: config.messages.error });
       }
 
-      res.status(201).json({ message: 'Contact request created successfully' });
+      res.status(201).json({ message: 'Solicitação enviada com sucesso! Entraremos em contato em breve.' });
     });
   },
 
@@ -87,22 +93,33 @@ const contactRequestController = {
     const { psychologist_id, name, email, phone, message } = req.body;
 
     if (!id || isNaN(id)) {
-      return res.status(400).json({ error: 'Invalid request ID' });
+      return res.status(400).json({ error: 'ID da solicitação inválido' });
     }
 
     if (!name || !email || !message) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res
+        .status(400)
+        .json({ error: 'Campos obrigatórios: nome, email e mensagem' });
     }
 
-    const data = { psychologist_id, name, email, phone, message };
+    if (name.length < nameMinLength || message.length < messageMinLength) {
+      return res.status(400).json({ error: config.messages.validationError });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Email inválido' });
+    }
+
+    const data = { psychologist_id: psychologist_id || null, name, email, phone: phone || null, message };
 
     ContactRequest.update(id, data, (err) => {
       if (err) {
-        console.error('Error updating contact request:', err);
-        return res.status(500).json({ error: 'Error updating contact request' });
+        console.error('Erro ao atualizar solicitação:', err);
+        return res.status(500).json({ error: config.messages.error });
       }
 
-      res.json({ message: 'Contact request updated successfully' });
+      res.json({ message: 'Solicitação atualizada com sucesso' });
     });
   },
 
@@ -110,16 +127,16 @@ const contactRequestController = {
     const { id } = req.params;
 
     if (!id || isNaN(id)) {
-      return res.status(400).json({ error: 'Invalid request ID' });
+      return res.status(400).json({ error: 'ID da solicitação inválido' });
     }
 
     ContactRequest.delete(id, (err) => {
       if (err) {
-        console.error('Error deleting contact request:', err);
-        return res.status(500).json({ error: 'Error deleting contact request' });
+        console.error('Erro ao remover solicitação:', err);
+        return res.status(500).json({ error: config.messages.error });
       }
 
-      res.json({ message: 'Contact request deleted successfully' });
+      res.json({ message: 'Solicitação removida com sucesso' });
     });
   },
 
@@ -127,18 +144,18 @@ const contactRequestController = {
     const { id } = req.params;
 
     if (!id || isNaN(id)) {
-      return res.status(400).json({ error: 'Invalid request ID' });
+      return res.status(400).json({ error: 'ID da solicitação inválido' });
     }
 
     ContactRequest.markAsRead(id, (err) => {
       if (err) {
-        console.error('Error marking as read:', err);
-        return res.status(500).json({ error: 'Error marking as read' });
+        console.error('Erro ao marcar como lida:', err);
+        return res.status(500).json({ error: config.messages.error });
       }
 
-      res.json({ message: 'Marked as read successfully' });
+      res.json({ message: 'Marcada como lida' });
     });
-  }
+  },
 };
 
 module.exports = contactRequestController;

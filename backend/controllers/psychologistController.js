@@ -1,11 +1,14 @@
 const Psychologist = require('../models/psychologist');
+const config = require('../config');
 
 const psychologistController = {
   listActive: (req, res) => {
     Psychologist.listActive((err, rows) => {
       if (err) {
-        console.error('Error fetching psychologists:', err);
-        return res.status(500).json({ error: 'Error fetching psychologists' });
+        console.error('Erro ao buscar psicólogos:', err);
+        return res
+          .status(500)
+          .json({ error: config.messages.error });
       }
       res.json(rows || []);
     });
@@ -14,8 +17,10 @@ const psychologistController = {
   listAll: (req, res) => {
     Psychologist.listAll((err, rows) => {
       if (err) {
-        console.error('Error fetching psychologists:', err);
-        return res.status(500).json({ error: 'Error fetching psychologists' });
+        console.error('Erro ao buscar psicólogos:', err);
+        return res
+          .status(500)
+          .json({ error: config.messages.error });
       }
       res.json(rows || []);
     });
@@ -25,17 +30,19 @@ const psychologistController = {
     const { id } = req.params;
 
     if (!id || isNaN(id)) {
-      return res.status(400).json({ error: 'Invalid psychologist ID' });
+      return res.status(400).json({ error: 'ID do psicólogo inválido' });
     }
 
     Psychologist.getById(id, (err, row) => {
       if (err) {
-        console.error('Error fetching psychologist:', err);
-        return res.status(500).json({ error: 'Error fetching psychologist' });
+        console.error('Erro ao buscar psicólogo:', err);
+        return res
+          .status(500)
+          .json({ error: config.messages.error });
       }
 
       if (!row) {
-        return res.status(404).json({ error: 'Psychologist not found' });
+        return res.status(404).json({ error: 'Psicólogo não encontrado' });
       }
 
       res.json(row);
@@ -44,56 +51,69 @@ const psychologistController = {
 
   create: (req, res) => {
     const { name, crp, specialty, description, full_bio, education, photo_url } = req.body;
+    const { nameMaxLength, crpMaxLength } = config.validation;
 
-    // Validations
     if (!name || !crp || !specialty || !description) {
-      return res.status(400).json({ error: 'Missing required fields: name, crp, specialty, description' });
+      return res
+        .status(400)
+        .json({ error: 'Campos obrigatórios: nome, crp, especialidade e descrição' });
     }
 
-    if (name.length > 150) {
-      return res.status(400).json({ error: 'Name must be less than 150 characters' });
+    if (name.length > nameMaxLength) {
+      return res
+        .status(400)
+        .json({ error: `Nome deve ter no máximo ${nameMaxLength} caracteres` });
     }
 
-    if (crp.length > 20) {
-      return res.status(400).json({ error: 'CRP must be less than 20 characters' });
+    if (crp.length > crpMaxLength) {
+      return res
+        .status(400)
+        .json({ error: `CRP deve ter no máximo ${crpMaxLength} caracteres` });
     }
 
     const data = { name, crp, specialty, description, full_bio, education, photo_url };
 
     Psychologist.create(data, (err) => {
       if (err) {
-        console.error('Error creating psychologist:', err);
-        if (err.message.includes('UNIQUE constraint failed')) {
-          return res.status(400).json({ error: 'CRP already exists' });
+        console.error('Erro ao criar psicólogo:', err);
+        if (err.message && err.message.includes('UNIQUE constraint failed')) {
+          return res.status(400).json({ error: 'CRP já cadastrado' });
         }
-        return res.status(500).json({ error: 'Error creating psychologist' });
+        return res.status(500).json({ error: config.messages.error });
       }
 
-      res.status(201).json({ message: 'Psychologist created successfully' });
+      res.status(201).json({ message: 'Psicólogo cadastrado com sucesso' });
     });
   },
 
   update: (req, res) => {
     const { id } = req.params;
     const { name, crp, specialty, description, full_bio, education, photo_url } = req.body;
+    const { nameMaxLength, crpMaxLength } = config.validation;
 
     if (!id || isNaN(id)) {
-      return res.status(400).json({ error: 'Invalid psychologist ID' });
+      return res.status(400).json({ error: 'ID do psicólogo inválido' });
     }
 
     if (!name || !crp || !specialty || !description) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res
+        .status(400)
+        .json({ error: 'Campos obrigatórios: nome, crp, especialidade e descrição' });
+    }
+
+    if (name.length > nameMaxLength || crp.length > crpMaxLength) {
+      return res.status(400).json({ error: config.messages.validationError });
     }
 
     const data = { name, crp, specialty, description, full_bio, education, photo_url };
 
     Psychologist.update(id, data, (err) => {
       if (err) {
-        console.error('Error updating psychologist:', err);
-        return res.status(500).json({ error: 'Error updating psychologist' });
+        console.error('Erro ao atualizar psicólogo:', err);
+        return res.status(500).json({ error: config.messages.error });
       }
 
-      res.json({ message: 'Psychologist updated successfully' });
+      res.json({ message: 'Psicólogo atualizado com sucesso' });
     });
   },
 
@@ -101,18 +121,18 @@ const psychologistController = {
     const { id } = req.params;
 
     if (!id || isNaN(id)) {
-      return res.status(400).json({ error: 'Invalid psychologist ID' });
+      return res.status(400).json({ error: 'ID do psicólogo inválido' });
     }
 
     Psychologist.delete(id, (err) => {
       if (err) {
-        console.error('Error deleting psychologist:', err);
-        return res.status(500).json({ error: 'Error deleting psychologist' });
+        console.error('Erro ao remover psicólogo:', err);
+        return res.status(500).json({ error: config.messages.error });
       }
 
-      res.json({ message: 'Psychologist deleted successfully' });
+      res.json({ message: 'Psicólogo removido com sucesso' });
     });
-  }
+  },
 };
 
 module.exports = psychologistController;

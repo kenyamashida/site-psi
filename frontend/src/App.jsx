@@ -1,115 +1,114 @@
-import React, { useState, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
 
-
-// Importação de componentes modulares
-import Navbar from './components/navbar/Navbar';
-import Footer from './components/footer/Footer';
+import Header from './components/layout/Header';
+import Footer from './components/layout/Footer';
 import Home from './pages/Home';
+import Servicos from './pages/Servicos';
+import Psicologos from './pages/Psicologos';
+import PsicologoDetail from './pages/PsicologoDetail';
+import Contato from './pages/Contato';
+import Admin from './pages/admin/Admin';
+import { psychologistsFallback } from './lib/data';
+import { API_URL } from './lib/api';
 
-/**
- * App.jsx - Orquestrador da Aplicação
- */
 export default function App() {
-  // 1. Defina a variável com o link do seu Render (MUDE APENAS ISTO)
-  const API_URL = 'https://site-psi.onrender.com';
-
-  const [tema, setTema] = useState('claro');
+  const location = useLocation();
+  const isAdminRoute = location.pathname === '/login';
   const [statusBackend, setStatusBackend] = useState('offline');
-  const [cidades, setCidades] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-/**
-   * Função para procurar dados no servidor Node.js (Render)
-   */
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Usamos a variável API_URL em vez do localhost
-      const statusRes = await fetch(`${API_URL}/api/health`);
-      if (!statusRes.ok) throw new Error('Health check failed');
-      
-      const statusJson = await statusRes.json();
-      const isOnline = statusJson.status === 'ok';
-      if (!isOnline) throw new Error('Backend returned bad status');
-
-      setStatusBackend('online');
-
-      // Usamos a variável API_URL para buscar os profissionais
-      const profissionaisRes = await fetch(`${API_URL}/api/professionals/`);
-      if (!profissionaisRes.ok) throw new Error('Failed to fetch professionals');
-      
-      const profissionaisJson = await profissionaisRes.json();
-      setCidades(profissionaisJson);
-    } catch (err) {
-      console.error('Erro na ligação ao backend:', err);
-      setStatusBackend('offline');
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [psychologists, setPsychologists] = useState([]);
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const statusRes = await fetch(`${API_URL}/api/health`);
+        if (!statusRes.ok) throw new Error('Health check failed');
+        const statusJson = await statusRes.json();
+        if (statusJson.status !== 'ok') throw new Error('Backend returned bad status');
+        setStatusBackend('online');
+
+        const profRes = await fetch(`${API_URL}/api/professionals/`);
+        if (profRes.ok) {
+          const data = await profRes.json();
+          setPsychologists(
+            Array.isArray(data)
+              ? data.map((p) => ({
+                  id: String(p.id),
+                  name: p.name,
+                  specialty: p.specialty,
+                  bio: p.description || p.full_bio,
+                  imageUrl: p.photo_url,
+                }))
+              : []
+          );
+        }
+      } catch {
+        setStatusBackend('offline');
+      }
+    };
     fetchData();
   }, []);
 
   return (
-    <div className={`min-h-screen flex flex-col transition-colors duration-500 ${
-      tema === 'escuro' ? 'bg-zinc-950 text-white' : 'bg-zinc-50 text-zinc-900'
-    }`}>
-      
-      {/* Menu de Navegação superior */}
-      <Navbar 
-        titulo="BrasilTour ✈️" 
-        tema={tema} 
-        setTema={setTema} 
-      />
+    <div className="relative min-h-screen flex flex-col bg-background text-foreground antialiased">
+      {!isAdminRoute && <Header />}
 
-      <main className="grow max-w-6xl mx-auto w-full px-6 py-12">
-        {/* Indicador de Status da API no canto superior direito */}
-        <div className="flex justify-end mb-8">
-          <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-            statusBackend === 'online' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'
-          }`}>
-            <div className={`w-2 h-2 rounded-full ${statusBackend === 'online' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-            {statusBackend === 'online' ? 'Backend Online' : 'Backend Offline'}
-          </div>
+      {/* Indicador de Status da API - escondido no admin */}
+      {!isAdminRoute && (
+      <div className="fixed top-20 right-6 z-40">
+        <div
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+            statusBackend === 'online'
+              ? 'bg-primary/10 text-primary'
+              : 'bg-destructive/10 text-destructive'
+          }`}
+        >
+          <div
+            className={`w-2 h-2 rounded-full ${
+              statusBackend === 'online'
+                ? 'bg-primary animate-pulse'
+                : 'bg-destructive'
+            }`}
+          />
+          {statusBackend === 'online' ? 'Backend Online' : 'Backend Offline'}
         </div>
+      </div>
+      )}
 
-        {/* Definição das Rotas da Aplicação */}
+      <main className="relative grow">
         <Routes>
-          <Route path="/" element={
-            <Home 
-              tema={tema} 
-              cidades={cidades} 
-              loading={loading} 
-              error={error} 
-              fetchData={fetchData} 
-            />
-          } />
-          <Route path="/sobre" element={
-            <div className="text-center py-20">
-              <h1 className="text-4xl font-black mb-4">Sobre o Projeto</h1>
-              <p className="max-w-xl mx-auto opacity-70 leading-relaxed">
-                BrasilTour é uma plataforma Fullstack desenvolvida para exemplificar a 
-                integração entre React e Node.js em tempo real.
-              </p>
-            </div>
-          } />
-          <Route path="/contato" element={
-            <div className="text-center py-20">
-              <h1 className="text-4xl font-black mb-4">Contacto</h1>
-              <p className="opacity-70">Estamos disponíveis para suporte através dos nossos canais oficiais.</p>
-            </div>
-          } />
+          <Route
+            path="/"
+            element={
+              <Home
+                psychologists={
+                  psychologists.length > 0 ? psychologists : psychologistsFallback
+                }
+              />
+            }
+          />
+          <Route path="/servicos" element={<Servicos />} />
+          <Route
+            path="/psicologos"
+            element={<Psicologos API_URL={API_URL} />}
+          />
+          <Route
+            path="/psicologos/:id"
+            element={<PsicologoDetail API_URL={API_URL} />}
+          />
+          <Route path="/contato" element={<Contato API_URL={API_URL} />} />
+          <Route
+            path="/login"
+            element={
+              <div className="min-h-screen">
+                <Admin />
+              </div>
+            }
+          />
         </Routes>
       </main>
 
-      {/* Rodapé fixo */}
-      <Footer tema={tema} />
+      {!isAdminRoute && <Footer />}
     </div>
   );
 }

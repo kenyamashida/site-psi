@@ -1,1 +1,39 @@
 @import "tailwindcss";
+
+/* Design System SitePsicologia - Tons pastéis e relaxantes */
+@theme {
+  --color-background: hsl(80 15% 92%);
+  --color-foreground: hsl(160 25% 12%);
+  --color-card: hsl(80 15% 94%);
+  --color-card-foreground: hsl(160 25% 12%);
+  --color-primary: hsl(160 25% 30%);
+  --color-primary-foreground: hsl(80 15% 95%);
+  --color-secondary: hsl(80 10% 88%);
+  --color-secondary-foreground: hsl(160 25% 20%);
+  --color-muted: hsl(80 10% 85%);
+  --color-muted-foreground: hsl(160 10% 35%);
+  --color-accent: hsl(195 25% 45%);
+  --color-accent-foreground: hsl(210 40% 98%);
+  --color-destructive: hsl(0 84.2% 60.2%);
+  --color-destructive-foreground: hsl(210 40% 98%);
+  --color-border: hsl(160 15% 80%);
+  --color-input: hsl(160 15% 80%);
+  --color-ring: hsl(160 25% 30%);
+  --radius-lg: 1.5rem;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-headline: 'Inter', system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply antialiased bg-background text-foreground;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}

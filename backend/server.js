@@ -4,56 +4,67 @@ const config = require('./config');
 
 const app = express();
 
-// Import routes
+// Rotas
 const professionalsRouter = require('./routes/professionals');
 const contactsRouter = require('./routes/contacts');
+const blogRouter = require('./routes/blog');
+const authRouter = require('./routes/auth');
+const adminRouter = require('./routes/admin');
 
 // Middleware
-// CORREÇÃO DO CORS: Permite que o Vercel (e qualquer outro domínio) consiga ler os dados.
 app.use(cors());
 app.use(express.json());
 
-// Routes
+// Rotas da API
 app.use('/api/professionals', professionalsRouter);
 app.use('/api/request', contactsRouter);
+app.use('/api/blog', blogRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/admin', adminRouter);
 
-// Health check (Útil para o Render verificar se o servidor está online)
+// Health check (Render, Vercel, etc.)
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ status: 'ok', service: 'SitePsicologia API' });
 });
 
-// 404 handler
+// 404
 app.use((req, res) => {
-  res.status(404).json({ error: 'Endpoint not found' });
+  res.status(404).json({ error: 'Endpoint não encontrado' });
 });
 
-// CORREÇÃO DO RENDER: 
-// process.env.PORT permite que o Render defina a porta automaticamente.
-// HOST = '0.0.0.0' obriga o servidor a abrir-se para a internet (evita o erro de Timeout).
 const PORT = process.env.PORT || config.port || 10000;
-const HOST = '0.0.0.0';
+const HOST = process.env.HOST || config.host || '0.0.0.0';
 
-const server = app.listen(PORT, HOST, () => {
-  console.log(`\n🚀 Server running on http://${HOST}:${PORT}`);
-  console.log(`📡 CORS is fully open for Vercel and other origins`);
-  console.log(`\n📚 API Routes:`);
-  console.log(`  GET    /api/professionals/       - List active psychologists`);
-  console.log(`  GET    /api/professionals/all    - List all psychologists`);
-  console.log(`  GET    /api/professionals/:id    - Get one psychologist`);
-  console.log(`  POST   /api/professionals/       - Create psychologist`);
-  console.log(`  PUT    /api/professionals/:id    - Update psychologist`);
-  console.log(`  DELETE /api/professionals/:id    - Delete psychologist`);
-  console.log(`\n  GET    /api/request/             - List contact requests`);
-  console.log(`  GET    /api/request/:id          - Get one request`);
-  console.log(`  GET    /api/request/psychologist/:id - Get requests for psychologist`);
-  console.log(`  POST   /api/request/             - Create contact request`);
-  console.log(`  PUT    /api/request/:id          - Update request`);
-  console.log(`  PATCH  /api/request/:id/read     - Mark as read`);
-  console.log(`  DELETE /api/request/:id          - Delete request`);
+app.listen(PORT, HOST, () => {
+  console.log(`\n🚀 SitePsicologia API em http://${HOST}:${PORT}`);
+  console.log(`📡 CORS habilitado para origens configuradas`);
+  console.log(`\n📚 Rotas da API:`);
+  console.log(`  GET    /api/health                - Status do servidor`);
+  console.log(`  GET    /api/professionals/        - Lista psicólogos ativos`);
+  console.log(`  GET    /api/professionals/all     - Lista todos os psicólogos`);
+  console.log(`  GET    /api/professionals/:id     - Um psicólogo`);
+  console.log(`  POST   /api/professionals/        - Criar psicólogo`);
+  console.log(`  PUT    /api/professionals/:id     - Atualizar psicólogo`);
+  console.log(`  DELETE /api/professionals/:id     - Remover psicólogo`);
+  console.log(`\n  GET    /api/request/             - Lista solicitações de contato`);
+  console.log(`  GET    /api/request/psychologist/:id - Solicitações por psicólogo`);
+  console.log(`  GET    /api/request/:id           - Uma solicitação`);
+  console.log(`  POST   /api/request/              - Criar solicitação`);
+  console.log(`  PUT    /api/request/:id           - Atualizar solicitação`);
+  console.log(`  PATCH  /api/request/:id/read      - Marcar como lida`);
+  console.log(`  DELETE /api/request/:id           - Remover solicitação`);
+  console.log(`  GET    /api/blog                 - Lista posts do blog`);
+  console.log(`  GET    /api/blog/:id              - Um post do blog`);
+  console.log(`\n  POST   /api/auth/login           - Login (email, senha)`);
+  console.log(`  GET    /api/auth/me              - Usuário atual (Bearer token)`);
+  console.log(`  GET    /api/admin/psychologists  - Lista psicólogos (auth)`);
+  console.log(`  POST   /api/admin/psychologists  - Criar psicólogo (auth)`);
+  console.log(`  PUT    /api/admin/psychologists/:id - Atualizar (auth)`);
+  console.log(`  DELETE /api/admin/psychologists/:id - Remover (auth)`);
+  console.log(`  GET    /api/admin/requests       - Lista solicitações (auth)`);
   console.log(`\n`);
 });
 
-// Error handling
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
 });
